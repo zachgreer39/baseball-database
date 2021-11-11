@@ -1,4 +1,5 @@
 library(tidyverse);
+##packages used but not loaded: lahman, baseballr
 
 career_batting=function(year, regular_season=TRUE) {
   
@@ -25,6 +26,7 @@ career_batting=function(year, regular_season=TRUE) {
   
 };
 modern_era_batting=function(year=1960){
+  
   df1=career_batting(year=year)
   list=unique(df1$playerID)
   df2=career_batting(year=min((Lahman::Batting)$yearID)) %>% 
@@ -32,6 +34,7 @@ modern_era_batting=function(year=1960){
   df2=df2 %>% anti_join(df1, 
                         by=c("playerID", "season", "level", 
                              "league", "team", "order"));
+  
   
   df3=career_batting(year=year, regular_season=FALSE)
   list=unique(df3$playerID)
@@ -53,10 +56,14 @@ modern_era_batting=function(year=1960){
   
   df_final %>% mutate(order=factor(order)) %>% 
     mutate(order=fct_relevel(order, playoff_order(df_final))) %>% 
-    arrange(playerID, season, level, league, order)
+    arrange(playerID, season, level, league, order) %>% 
+    rename(lahmanID=playerID)
   
 };
-##df_career_batting=modern_era_batting();
+
+df_yrly_batting=modern_era_batting();
+
+
 
 career_pitching=function(year, regular_season=TRUE) {
   
@@ -83,6 +90,7 @@ career_pitching=function(year, regular_season=TRUE) {
   
 };
 modern_era_pitching=function(year=1960){
+  
   df1=career_pitching(year=year)
   list=unique(df1$playerID)
   df2=career_pitching(year=min((Lahman::Pitching)$yearID)) %>% 
@@ -111,8 +119,63 @@ modern_era_pitching=function(year=1960){
   
   df_final %>% mutate(order=factor(order)) %>% 
     mutate(order=fct_relevel(order, playoff_order(df_final))) %>% 
-    arrange(playerID, season, level, league, order)
+    arrange(playerID, season, level, league, order) %>% 
+    rename(lahmanID=playerID)
   
 };
-##df_career_pitching=modern_era_pitching();
 
+df_yrly_pitching=modern_era_pitching();
+
+
+
+lahmanID_join=function(df){
+  
+  Lahman::People %>% rename(lahmanID=playerID) %>% semi_join(df)
+  
+};
+lahmanID_merge=function(){
+  
+  rbind(lahmanID_join(df_yrly_batting), 
+        lahmanID_join(df_yrly_pitching)) %>% distinct() %>%
+    transmute(player_name=paste(nameFirst, nameLast), lahmanID, 
+              retroID, bbrefID, bats, throws, debutGame=debut, finalGame, 
+              birthDate, deathDate, birthCity, birthState, birthCountry)
+  
+};
+chadwick_tbl=function(){
+  
+  drop_col=function(df){df[,colSums(is.na(df))<nrow(df)]}
+  
+  baseballr::get_chadwick_lu() %>% 
+    transmute(retroID=key_retro, bbrefID=key_bbref, 
+              bbrefMinorsID=key_bbref_minors, mlbID=key_mlbam, 
+              fangraphsID=key_fangraphs, npbID=key_npb, 
+              nflID=key_sr_nfl, nbaID=key_sr_nba, nhlID=key_sr_nhl, 
+              col_debut_yr=col_played_first, 
+              pro_debut_yr=pro_played_first, 
+              mlb_debut_yr=mlb_played_first, 
+              col_final_yr=col_played_last, 
+              pro_final_yr=pro_played_last, 
+              mlb_final_yr=mlb_played_last, 
+              col_mng_debut_yr=col_managed_first, 
+              pro_mng_debut_yr=pro_managed_first, 
+              mlb_mng_debut_yr=mlb_managed_first, 
+              col_mng_final_yr=col_managed_last, 
+              pro_mng_final_yr=pro_managed_last, 
+              mlb_mng_final_yr=mlb_managed_last, 
+              pro_ump_debut_yr=pro_umpired_first, 
+              mlb_ump_debut_yr=mlb_umpired_first, 
+              pro_ump_final_yr=pro_umpired_last, 
+              mlb_ump_final_yr=mlb_umpired_last) %>% drop_col()
+  
+};
+player_merge=function(){
+  
+  lahmanID_merge() %>% 
+    left_join(chadwick_tbl())
+  
+};
+
+df_players=player_merge();
+rm(career_batting, career_pitching, chadwick_tbl, lahmanID_join, 
+   lahmanID_merge, modern_era_batting, modern_era_pitching, player_merge);
