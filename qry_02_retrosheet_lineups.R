@@ -23,10 +23,16 @@ retro_list=function(year, team){
 
 
 ##declaring team list
-teams=retrosheet::getTeamIDs(2020)
+teams=retrosheet::getTeamIDs(2003)
 
-##writes 
-team_list=retro_list(2020, "MIL");
+##currently set up to pull one team at a time from vector built above
+##highlight block below and run 30 times
+##write csv, null out values and start process over for new year
+##RETURN AND REWRITE FUNCTION TO LOOP THROUGH ALL TEAMS
+##LOOP WORKED FINE BUT UNABLE TO SAVE OUTPUT VIA DISPLAYING ON SCREEN
+##OR STORING IN ENVIRONMENT 
+x=x+1
+team_list=retro_list(2003, teams[x]);
 ##df_lineups=NULL;
 for(i in 1:length(team_list)){
   
@@ -61,4 +67,9 @@ for(i in 1:length(team_list)){
 };
 
 
-write.csv(df_lineups, "lineups_2020.csv", row.names=FALSE)
+
+
+
+write.csv(df_lineups, "lineups_2003.csv", row.names=FALSE)
+x=0
+df_lineups=NULL;
