@@ -24,14 +24,14 @@ retro_list=function(year, team){
 
 ##declaring team list
 x=0
-teams=retrosheet::getTeamIDs(2015)
+teams=retrosheet::getTeamIDs(2003)
 
 
 
 ##df_game_info=NULL;
 
 x=x+1
-team_list=retro_list(2015, teams[x]);
+team_list=retro_list(2003, teams[x]);
 for(i in 1:length(team_list)) {
   
   single_line=cbind(df_(team_list[[i]]$id) %>% rename(game_id=df) %>% drop_na(),
@@ -43,4 +43,26 @@ for(i in 1:length(team_list)) {
 
 
 
-write.csv(df_game_info, "df_games_15_21.csv", row.names=FALSE)
+
+
+
+
+df_games=plyr::rbind.fill(read.csv("df_games_15_21.csv"), 
+                          read.csv("df_games_07_14.csv"), 
+                          df_game_info)
+
+
+df_games=df_games %>% mutate(date=lubridate::ymd(date), 
+                        inputtime=lubridate::ymd_hms(inputtime), 
+                        attendance=as.numeric(attendance), 
+                        windspeed=as.numeric(windspeed)) %>% 
+      select(-c("umplf", "umprf", "howscored", "pitches", "timeofgame", "htbf"))
+
+
+
+
+
+df_games %>% group_by(number) %>% count()
+
+
+write.csv(df_games, "df_games.csv", row.names=FALSE)

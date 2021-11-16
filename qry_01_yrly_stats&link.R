@@ -179,3 +179,8 @@ player_merge=function(){
 df_players=player_merge();
 rm(career_batting, career_pitching, chadwick_tbl, lahmanID_join, 
    lahmanID_merge, modern_era_batting, modern_era_pitching, player_merge);
+
+
+df_players=df_players %>% mutate(debutGame=lubridate::ymd(debutGame), 
+                                 finalGame=lubridate::ymd(finalGame)) %>% 
+  select(1:4, 14:16, 5:13, 17:24)
